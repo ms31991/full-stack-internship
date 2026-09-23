@@ -11,14 +11,20 @@ class ProjectController extends Controller
     {
         $projects = Project::all();
 
-        return $projects;
+        return response()->json($projects, 200);
     }
 
     public function show($id)
     {
         $project = Project::find($id);
 
-        return $project;
+        if (!$project) {
+            return response()->json([
+                'message' => 'Project not found'
+            ], 404);
+        }
+
+        return response()->json($project, 200);
     }
 
     public function store(Request $request)
@@ -29,29 +35,41 @@ class ProjectController extends Controller
             'description' => $request->description,
         ]);
 
-        return $project;
+        return response()->json($project, 201);
     }
 
     public function update(Request $request, $id)
     {
         $project = Project::find($id);
 
+        if (!$project) {
+            return response()->json([
+                'message' => 'Project not found'
+            ], 404);
+        }
+
         $project->update([
             'title' => $request->title,
             'description' => $request->description,
         ]);
 
-        return $project;
+        return response()->json($project, 200);
     }
 
     public function destroy($id)
     {
         $project = Project::find($id);
 
+        if (!$project) {
+            return response()->json([
+                'message' => 'Project not found'
+            ], 404);
+        }
+
         $project->delete();
 
         return response()->json([
             'message' => 'Project deleted successfully'
-        ]);
+        ], 200);
     }
 }
