@@ -6,6 +6,7 @@ use App\Models\Project;
 use App\Http\Requests\StoreProjectRequest;
 use App\Http\Requests\UpdateProjectRequest;
 use App\Http\Resources\ProjectResource;
+use Illuminate\Support\Facades\Gate;
 
 class ProjectController extends Controller
 {
@@ -26,12 +27,20 @@ class ProjectController extends Controller
             ], 404);
         }
 
+        Gate::authorize('view', $project);
+
         return new ProjectResource($project);
     }
 
     public function store(StoreProjectRequest $request)
     {
-        $project = Project::create($request->validated());
+        Gate::authorize('create', Project::class);
+
+        $project = Project::create([
+            'user_id' => $request->user()->id,
+            'title' => $request->validated()['title'],
+            'description' => $request->validated()['description'] ?? null,
+        ]);
 
         $project->load(['user', 'tasks']);
 
@@ -47,6 +56,8 @@ class ProjectController extends Controller
                 'message' => 'Project not found'
             ], 404);
         }
+
+        Gate::authorize('update', $project);
 
         $project->update($request->validated());
 
@@ -64,6 +75,8 @@ class ProjectController extends Controller
                 'message' => 'Project not found'
             ], 404);
         }
+
+        Gate::authorize('delete', $project);
 
         $project->delete();
 
