@@ -5,19 +5,20 @@ namespace App\Http\Controllers;
 use App\Models\Project;
 use App\Http\Requests\StoreProjectRequest;
 use App\Http\Requests\UpdateProjectRequest;
+use App\Http\Resources\ProjectResource;
 
 class ProjectController extends Controller
 {
     public function index()
     {
-        $projects = Project::all();
+        $projects = Project::with(['user', 'tasks'])->get();
 
-        return response()->json($projects, 200);
+        return ProjectResource::collection($projects);
     }
 
     public function show($id)
     {
-        $project = Project::find($id);
+        $project = Project::with(['user', 'tasks'])->find($id);
 
         if (!$project) {
             return response()->json([
@@ -25,14 +26,16 @@ class ProjectController extends Controller
             ], 404);
         }
 
-        return response()->json($project, 200);
+        return new ProjectResource($project);
     }
 
     public function store(StoreProjectRequest $request)
     {
         $project = Project::create($request->validated());
 
-        return response()->json($project, 201);
+        $project->load(['user', 'tasks']);
+
+        return new ProjectResource($project);
     }
 
     public function update(UpdateProjectRequest $request, $id)
@@ -47,7 +50,9 @@ class ProjectController extends Controller
 
         $project->update($request->validated());
 
-        return response()->json($project, 200);
+        $project->load(['user', 'tasks']);
+
+        return new ProjectResource($project);
     }
 
     public function destroy($id)

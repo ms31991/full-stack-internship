@@ -5,19 +5,20 @@ namespace App\Http\Controllers;
 use App\Models\Task;
 use App\Http\Requests\StoreTaskRequest;
 use App\Http\Requests\UpdateTaskRequest;
+use App\Http\Resources\TaskResource;
 
 class TaskController extends Controller
 {
     public function index()
     {
-        $tasks = Task::all();
+        $tasks = Task::with('project')->get();
 
-        return response()->json($tasks, 200);
+        return TaskResource::collection($tasks);
     }
 
     public function show($id)
     {
-        $task = Task::find($id);
+        $task = Task::with('project')->find($id);
 
         if (!$task) {
             return response()->json([
@@ -25,14 +26,16 @@ class TaskController extends Controller
             ], 404);
         }
 
-        return response()->json($task, 200);
+        return new TaskResource($task);
     }
 
     public function store(StoreTaskRequest $request)
     {
         $task = Task::create($request->validated());
 
-        return response()->json($task, 201);
+        $task->load('project');
+
+        return new TaskResource($task);
     }
 
     public function update(UpdateTaskRequest $request, $id)
@@ -47,7 +50,9 @@ class TaskController extends Controller
 
         $task->update($request->validated());
 
-        return response()->json($task, 200);
+        $task->load('project');
+
+        return new TaskResource($task);
     }
 
     public function destroy($id)
